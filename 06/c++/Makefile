@@ -1,11 +1,16 @@
 prog: prog.cpp
 	g++ -o $@ -std=c++11 -O2 -Wall -Wextra $<
 
-puzzle1: prog
-	./prog < ../input.txt
+puzzle: prog
+	@./prog < ../input.txt
 
-puzzle2: prog
-	./prog 5 < ../input.txt
+test1: prog
+	@echo "expected: 42 / ?"
+	@./prog < ../test1.txt
+
+test2: prog
+	@echo "expected: ? / 4"
+	@./prog < ../test2.txt
 
 format:
 	clang-format -i prog.cpp

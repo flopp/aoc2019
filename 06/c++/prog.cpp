@@ -42,37 +42,60 @@ SpaceObjects read_objects(std::istream& is) {
         }
     }
 
-    bool again = true;
-    while (again) {
-        again = false;
-        for (auto obj: objects) {
-            if (obj.second->center.empty()) {
-                continue;
-            }
-            if (objects.find(obj.second->center) != objects.end()) {
-                continue;
-            }
-
-            auto obj2 = new SpaceObject;
-            obj2->name = obj.second->center;
-            objects[obj2->name] = obj2;
-            again = true;
-            break;
+    std::vector<std::string> missing;
+    for (auto obj: objects) {
+        if (obj.second->center.empty()) {
+            continue;
         }
+        if (objects.find(obj.second->center) != objects.end()) {
+            continue;
+        }
+        missing.push_back(obj.second->center);
+    }
+    for (auto name: missing) {
+        auto obj = new SpaceObject;
+        obj->name = name;
+        objects[name] = obj;
     }
 
     return objects;
 }
 
-std::vector<SpaceObject*> compute_path(const std::string& obj, const SpaceObjects& objects) {
-    std::vector<SpaceObject*> path;
-    return path;
-}
-
 int transfers(const std::string& obj1, const std::string& obj2, const SpaceObjects& objects) {
-    auto path1 = compute_path(obj1, objects);
-    auto path2 = compute_path(obj2, objects);
-    return 0;
+    std::unordered_map<SpaceObject*, int> path1, path2;
+
+    int depth = 0;
+    for (auto current = obj1; !current.empty(); /**/) {
+        auto obj = objects.find(current);
+        assert(obj != objects.end());
+        path1[obj->second] = depth++;
+        current = obj->second->center;
+    }
+
+    depth = 0;
+    for (auto current = obj2; !current.empty(); /**/) {
+        auto obj = objects.find(current);
+        assert(obj != objects.end());
+        path2[obj->second] = depth++;
+        current = obj->second->center;
+    }
+
+    for (auto current = obj1; !current.empty(); /**/) {
+        auto obj = objects.find(current);
+        assert(obj != objects.end());
+
+        auto steps2 = path2.find(obj->second);
+        if (steps2 != path2.end()) {
+            auto steps1 = path1.find(obj->second);
+            assert(steps1 != path1.end());
+
+            return steps1->second + steps2->second - 2;
+        }
+
+        current = obj->second->center;
+    }
+
+    return -1;
 }
 
 int main(int argc, const char** argv) {
